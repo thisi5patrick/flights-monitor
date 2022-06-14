@@ -2,20 +2,19 @@
 This file fills the airline table from the planespotters.net site.
 A selenium web-scrapper is initialized which will go through each letter and each page of the
 letter to extract the airlines and their ICAO codes. Only airlines with > 0 aircrafts will be saved.
-Since the site allows only around 450 requests per 24 hours, 2 users must be created (or wait 24
+Since the site allows only around 450 requests per 24 hours, 3 users must be created (or wait 24
 hours to extract the second half of airlines).
 All extracted airlines are saved into the txt_files/visited.txt file to keep track which airlines have been extracted.
 After the second user is initialized this way, no new requests will be created and the extraction will continue
 from the last extracted airline.
 The site has a lot of popup adds, so an Adblock has to be added to the driver.
 TODO: remove the necessity of adblock
-Some ICAO codes are not present in the airline sites, so those have been manually extracted and put
-in the AIRLINES_NO_ICAO dictionary.
 
 Some countries are not written the same as the countries extracted from the fill_country_table.py file,
 hence the COUNTRIES_PARSER dictionary to standardize them.
-
 """
+from typing import Union
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import sqlite3
@@ -37,41 +36,9 @@ COUNTRIES_PARSER = {
     "Viet Nam": "VIETNAM",
     "Lao People's Democratic Republic": "LAO PEOPLE’S DEM. REPUBLIC",
     "Air One Aviation": "ADH",
+    "Congo, The Democratic Republic Of The": "CONGO (DEMOCRATIC REPUBLIC)",
 }
 
-AIRLINES_NO_ICAO = {
-    "Aero Regional": "RER",
-    "AeroRescue": "RES",
-    "aha!": "ASQ",
-    "Airbahn": "ARB",
-    "Airworks Kenya": "AKS",
-    "Al Haya Airlines": "HYA",
-    "Al-Atheer Aviation": "ATE",
-    "Amazon Prime Air": "MZN",
-    "Asia Pacific Airlines": "MGE",
-    "Bid Air Cargo": "BRH",
-    "Carre Aviation": "CRE",
-    "Denver Air Connection": "LYM",
-    "Elevate Jet": "LVT",
-    "Elite Air": "MNU",
-    "Gama Aviation": "GMA",
-    "Hello Jets": "HLJ",
-    "La Costena": "NIS",
-    "Leading Edge": "LDG",
-    "Legacy Airways": "LGF",
-    "NG Eagle": "XLE",
-    "Ocean Airlines": "VCX",
-    "Olympia Aviation": "OLY",
-    "OWG": "NRL",
-    "Pars Air": "PRS",
-    "Redwings": "RWZ",
-    "Renegade Air": "RNG",
-    "RGA-Black Stone Airlines": "RGM",
-    "Saurya Airlines": "SAU",
-    "Tchadia Airlines": "CDO",
-    "ValueJet": "VJA",
-    "Waltzing Matilda Aviation": "WZM",
-}
 
 EMAIL = ""
 PASSWORD = ""
@@ -82,15 +49,14 @@ def login_user(driver: webdriver) -> None:
     """
     Function will insert the username/email and password into the proper placeholders.
     Sometimes a CAPTCHA is shown and/or cookie information so the user must manually complete these steps.
-
     After that the Enter Key must be pressed to continue with the extraction
     :param driver: a webdriver object must be passed.
     :return: None
     """
     driver.get("https://www.planespotters.net/user/login")
-    driver.find_element(By.XPATH, '//*[@id="username"]').send_keys(PASSWORD)
+    driver.find_element(By.XPATH, '//*[@id="username"]').send_keys(EMAIL)
     driver.find_element(By.XPATH, '//*[@id="password"]').send_keys(PASSWORD)
-    input("PRESS ENTER")
+    input("LOGIN AND PRESS ENTER")
 
 
 def init_planesspotter_driver() -> webdriver:
@@ -107,7 +73,25 @@ def init_planesspotter_driver() -> webdriver:
     return driver
 
 
-def get_icao(driver: webdriver, link: str) -> str:
+def close(driver: webdriver) -> None:
+    """
+    Exit program. Close necessary objects
+    :param driver: Webdriver element
+    :return: None
+    """
+    driver.quit()
+    con.close()
+    exit(0)
+
+
+def get_icao(driver: webdriver, link: str) -> Union[str, None]:
+    """
+    Extract icao from a given page. If icao not exists return None.
+    If limit has been reached the program is terminated
+    :param driver: webdriver object
+    :param link: link of airline with icao information
+    :return:  string of icao or None
+    """
     driver.execute_script("window.open('');")
     driver.switch_to.window(driver.window_handles[1])
     driver.get(link)
@@ -122,7 +106,7 @@ def get_icao(driver: webdriver, link: str) -> str:
                 icao = None
             except Exception:
                 print("START THE PROGRAM AGAIN WITH NEW USER OR WAIT 24 HOURS.")
-                exit(0)
+                close(driver)
     driver.execute_script("window.close('');")
     driver.switch_to.window(driver.window_handles[0])
     return icao
@@ -135,7 +119,7 @@ def save_visited(link: str) -> None:
     :param link: link of the airline
     :return: None
     """
-    with open("visited.txt", "a") as f:
+    with open("txt_files/visited.txt", "a+") as f:
         f.write(f"{link}\n")
 
 
@@ -145,7 +129,7 @@ def save_airline(name: str) -> None:
     :param name: airline name
     :return: None
     """
-    with open("no_icao_airlines.txt", "a") as f:
+    with open("txt_files/no_icao_airlines.txt", "a+") as f:
         f.write(f"{name}\n")
 
 
@@ -155,7 +139,7 @@ def save_country(name: str) -> None:
     :param name: country name
     :return: None
     """
-    with open("country.txt", "a") as f:
+    with open("txt_files/country.txt", "a+") as f:
         f.write(f"{name}\n")
 
 
@@ -165,7 +149,7 @@ def is_country_saved(name: str) -> bool:
     :param name: country name
     :return: bool object if country is saved
     """
-    with open("country.txt") as f:
+    with open("txt_files/country.txt") as f:
         countries = f.read().split("\n")
     return name in countries
 
@@ -176,7 +160,7 @@ def is_visited(link: str) -> bool:
     :param link: link to airline
     :return: bool object if airline is already visited
     """
-    with open("visited.txt") as f:
+    with open("txt_files/visited.txt") as f:
         lines = f.read().split("\n")
     return link in lines
 
@@ -202,8 +186,6 @@ def extract_data(driver) -> None:
             continue
         icao = get_icao(driver, link)
         save_visited(link)
-        if airline_name in AIRLINES_NO_ICAO:
-            icao = AIRLINES_NO_ICAO[airline_name]
         if icao is None:
             save_airline(airline_name)
             continue
@@ -230,18 +212,20 @@ def parse_planesspotter(driver: webdriver) -> None:
     :return: None
     """
     alphabet = driver.find_elements(By.XPATH, "/html/body/main/div[1]/div/div/a")
-    for letter in range(len(alphabet) - 1):
-        pages = driver.find_elements(By.XPATH, "/html/body/main/div[2]/div[1]/div/div[2]/a[11]")
+    for letter in range(len(alphabet)):
+        pages = driver.find_elements(By.XPATH, "(/html/body/main/div[2]/div[1]/div/div[2]/a)[last()]")
         if pages:
             pages = int(pages[0].text)
-            for i in range(pages - 1):
+            for i in range(1, pages + 1):
                 extract_data(driver)
-                driver.find_element(By.XPATH, "/html/body/main/div[2]/div[1]/div/div[3]/a").click()
+                if i != pages:
+                    driver.find_element(By.XPATH, "/html/body/main/div[2]/div[1]/div/div[3]/a").click()
         else:
             extract_data(driver)
-        driver.find_element(
-            By.XPATH, "//a[contains(@class, 'letter__index_link_active')]/following-sibling::a[1]"
-        ).click()
+        if letter != len(alphabet) - 1:
+            driver.find_element(
+                By.XPATH, "//a[contains(@class, 'letter__index_link_active')]/following-sibling::a[1]"
+            ).click()
 
 
 con = sqlite3.connect("../database.db")
@@ -250,6 +234,6 @@ driver = init_planesspotter_driver()
 
 parse_planesspotter(driver)
 
-driver.close()
+driver.quit()
 
 con.close()
