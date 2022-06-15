@@ -15,8 +15,7 @@ may be private, or the aircraft does not belong to an airline.
 import sqlite3
 from typing import Union
 
-from constants.open_sky_api import *
-from constants.ads_exchange import ADSBEXCHANGE_AIRCRAFT_INFO, ADSBEXCHANGE_ICAO
+from constants import *
 import requests
 import time
 import urllib.parse
