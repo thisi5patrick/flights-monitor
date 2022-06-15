@@ -1,0 +1,6 @@
+OPEN_SKY_ENDPOINT = "https://opensky-network.org/api/"
+FLIGHTS_ARRIVAL = "flights/arrival"
+FLIGHTS_AIRCRAFT = "flights/aircraft"
+FLIGHTS_DEPARTURE = "flights/departure"
+ALL_STATE_VECTORS = "states/all"
+OWN_STATE_VECTORS = "states/own"
