@@ -14,6 +14,7 @@ tables = [
     AirportTable.__table__,
     CountryTable.__table__,
     FleetTable.__table__,
+    FlightTable.__table__,
 ]
 
 Base = declarative_base()

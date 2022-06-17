@@ -3,3 +3,4 @@ from .country import CountryTable
 from .airline import AirlineTable
 from .airport import AirportTable
 from .fleet import FleetTable
+from .flight import FlightTable
