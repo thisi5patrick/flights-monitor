@@ -28,4 +28,4 @@ build-backend = "poetry.core.masonry.api"
 py_version = 39
 profile = "black"
 line_length = 120
-skip = ["db/tables/__init__.py"]
+skip = ["database/tables/__init__.py"]

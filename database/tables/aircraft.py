@@ -1,7 +1,7 @@
 from sqlalchemy import Column
 from sqlalchemy.dialects.sqlite import INTEGER, TEXT
 
-from ..db_init import Base
+from ..db import Base
 
 
 class AircraftTable(Base):

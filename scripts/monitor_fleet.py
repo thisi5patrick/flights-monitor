@@ -25,7 +25,7 @@ from constants import *
 
 class Monitor:
     def __init__(self):
-        self.con = sqlite3.connect("../db/database.db")
+        self.con = sqlite3.connect("../database/database.db")
         self.endpoint = urllib.parse.urljoin(OPEN_SKY_ENDPOINT, ALL_STATE_VECTORS)
 
     def __check_if_transpoder_saved(self, transpoder_icao: str) -> bool:
