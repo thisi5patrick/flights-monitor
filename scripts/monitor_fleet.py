@@ -13,18 +13,19 @@ may be private, or the aircraft does not belong to an airline.
 """
 
 import sqlite3
-from typing import Union
-
-from constants import *
-import requests
 import time
 import urllib.parse
+from typing import Union
+
 import orjson
+import requests
+
+from constants import *
 
 
 class Monitor:
     def __init__(self):
-        self.con = sqlite3.connect("../database.db")
+        self.con = sqlite3.connect("../db/database.db")
         self.endpoint = urllib.parse.urljoin(OPEN_SKY_ENDPOINT, ALL_STATE_VECTORS)
 
     def __check_if_transpoder_saved(self, transpoder_icao: str) -> bool:

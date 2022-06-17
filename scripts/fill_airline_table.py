@@ -13,13 +13,13 @@ TODO: remove the necessity of adblock
 Some countries are not written the same as the countries extracted from the fill_country_table.py file,
 hence the COUNTRIES_PARSER dictionary to standardize them.
 """
+import os
+import re
+import sqlite3
 from typing import Union
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-import sqlite3
-import re
-import os
 
 COUNTRIES_PARSER = {
     "Moldova, Republic Of": "MOLDOVA",

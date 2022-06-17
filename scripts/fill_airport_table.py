@@ -1,8 +1,8 @@
 import os
+import sqlite3
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-import sqlite3
 
 con = sqlite3.connect("../database.db")
 
