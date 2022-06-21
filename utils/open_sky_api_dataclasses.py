@@ -1,4 +1,4 @@
-from typing import Union, Any
+from typing import Union, Any, Optional
 from dataclasses import dataclass
 
 
@@ -21,7 +21,10 @@ class AllStateVectorsResponse:
     squawk: Union[str, None]
     spi: bool
     position_source: int
-    unknown_item: Any
+    unknown_item: Optional[Any] = None
+
+    def __post_init__(self):
+        self.callsign = self.callsign.strip()
 
 
 @dataclass
