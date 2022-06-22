@@ -7,7 +7,8 @@ import urllib.parse
 from utils.open_sky_api_dataclasses import AllStateVectorsResponse
 import orjson
 from database.db import Session
-from database.tables import FlightTable, FlightStatusTable
+from database.tables import FlightTable, FlightStatusTable, FleetTable
+from global_land_mask import globe
 
 
 class Monitor:
@@ -26,20 +27,22 @@ class Monitor:
             result = (session.query(FlightStatusTable).filter(FlightStatusTable.flight_id == flight_id)).first()
         return result
 
-    def __save_flight(self, flight_id: int) -> None:
-        flight_status = FlightStatusTable(flight_id=flight_id, flight_status_flag_id=0)
+    def __save_flight(self, flight_id: int, fleet_id: int) -> None:
+        flight_status = FlightStatusTable(flight_id=flight_id, flight_status_flag_id=1, fleet_id=fleet_id)
         with self.session() as session:
             session.add(flight_status)
             session.commit()
 
-    def __save_departure(self, flight_id: int) -> None:
+    def __save_departure(self, flight_id: int, fleet_id: int = None) -> None:
         departure_timestamp = int(datetime.datetime.utcnow().timestamp())
         with self.session() as session:
             flight_status: FlightStatusTable = (
                 session.query(FlightStatusTable).filter(FlightStatusTable.flight_id == flight_id).first()
             )
             flight_status.departure_timestamp = departure_timestamp
-            flight_status.flight_status_flag_id = 1
+            flight_status.flight_status_flag_id = 0
+            if fleet_id:
+                flight_status.fleet_id = fleet_id
             session.commit()
 
     def __save_arrival(self, flight_id: int) -> None:
@@ -52,30 +55,79 @@ class Monitor:
             flight_status.flight_status_flag_id = 2
             session.commit()
 
+    def __get_fleet_id(self, transpoder_icao: str) -> Union[int, None]:
+        with self.session() as session:
+            result = session.query(FleetTable.id).filter(FleetTable.transpoder_icao == transpoder_icao).first()
+        if not result:
+            return None
+        return result[0]
+
     def loop(self):
         while True:
+            print(f"Start: {datetime.datetime.now()}")
             response = requests.get(self.endpoint)
             response = orjson.loads(response.text)
 
-            for item in response["states"]:
-                item = AllStateVectorsResponse(*item)
-                if item.callsign not in self.all_call_signs_with_ids:
+            for current_status in response["states"]:
+                current_status = AllStateVectorsResponse(*current_status)
+                if current_status.callsign not in self.all_call_signs_with_ids:
                     continue
-                flight_id = self.all_call_signs_with_ids.get(item.callsign)
+                flight_id = self.all_call_signs_with_ids.get(current_status.callsign)
                 if not flight_id:
                     continue
-                current_status = self.__get_current_flight_status(flight_id)
-                if not current_status:
-                    self.__save_flight(flight_id)
+                fleet_id = self.__get_fleet_id(current_status.icao24)
+                if not fleet_id:
                     continue
-                if current_status.flight_status_flag_id == 0 and item.on_ground is False:
-                    self.__save_departure(flight_id)
-                elif current_status.flight_status_flag_id == 1 and item.on_ground is True:
-                    self.__save_arrival(flight_id)
-                elif current_status.flight_status_flag_id == 0 and item.on_ground is True:
+                previous_status = self.__get_current_flight_status(flight_id)
+                if not previous_status:
+                    self.__save_flight(flight_id, fleet_id)
                     continue
+                """
+                IN_AIR = 0
+                ON_GROUND = 1
+                ARRIVED = 2
+                """
+                if (
+                    current_status.latitude is None
+                    or current_status.longitude is None
+                    or current_status.velocity is None
+                ):
+                    continue
+                if current_status.velocity > 20:
+                    if previous_status.flight_status_flag_id == 1 and current_status.on_ground is False:
+                        self.__save_departure(flight_id, fleet_id)
+                    elif previous_status.flight_status_flag_id == 2 and current_status.on_ground is False:
+                        self.__save_departure(flight_id, fleet_id)
+                    elif previous_status.flight_status_flag_id == 2 and current_status.on_ground is True:
+                        self.__save_departure(flight_id, fleet_id)
+                    elif previous_status.flight_status_flag_id == 1 and current_status.on_ground is True:
+                        self.__save_departure(flight_id, fleet_id)
+                    elif previous_status.flight_status_flag_id == 0 and current_status.on_ground is True:
+                        continue
+                    elif previous_status.flight_status_flag_id == 0 and current_status.on_ground is False:
+                        continue
+                    elif previous_status.flight_status_flag_id == 2 and current_status.on_ground is True:
+                        continue
+                    else:
+                        raise Exception(f"{previous_status.flight_status_flag_id=} ----- {current_status.on_ground=}")
                 else:
-                    raise Exception(f"{current_status.flight_status_flag_id=} ----- {item.on_ground=}")
+                    if previous_status.flight_status_flag_id == 0 and current_status.on_ground is True:
+                        self.__save_arrival(flight_id)
+                    elif previous_status.flight_status_flag_id == 1 and current_status.on_ground is True:
+                        continue
+                    elif previous_status.flight_status_flag_id == 2 and current_status.on_ground is True:
+                        continue
+                    elif previous_status.flight_status_flag_id == 2 and current_status.on_ground is False:
+                        continue
+                    elif globe.is_ocean(current_status.latitude, current_status.longitude):
+                        continue
+                    elif previous_status.flight_status_flag_id == 0 and current_status.on_ground is False:
+                        continue
+                    elif previous_status.flight_status_flag_id == 1 and current_status.on_ground is False:
+                        continue
+                    else:
+                        raise Exception(f"{previous_status.flight_status_flag_id=} ----- {current_status.on_ground=}")
+            print(f"End: {datetime.datetime.now()}")
 
 
 monitor = Monitor()
