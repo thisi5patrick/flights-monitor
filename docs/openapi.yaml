@@ -1,0 +1,42 @@
+openapi: 3.0.0
+info:
+  version: 0.0.2
+  title: Test title
+  description: Test description
+paths:
+    /api/airport:
+        get:
+            tags:
+                - Airport
+            summary: Endpoint returning a list of 1000 airports.
+            description: This is using docstrings for specifications.
+            responses:
+                200:
+                    description: A list of 1000 airports.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Airport'
+components:
+    schemas:
+        Airport:
+            type: object
+            properties:
+                name:
+                    type: string
+                    description: Name of the airport
+                icao:
+                    type: string
+                    description: Unique ICAO code for the airport
+                iata:
+                    type: string
+                    description: Unique IATA code for the airport
+                location:
+                    type: string
+                    description: Nearest location of the airport. Could be city or village
+                latitude:
+                    type: number
+                    description: Latitude of the airport
+                longitude:
+                    type: number
+                    description: Longitude of the airport
