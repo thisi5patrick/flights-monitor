@@ -1,5 +1,5 @@
 from sqlalchemy import Column, ForeignKey
-from sqlalchemy.dialects.sqlite import INTEGER, TEXT
+from sqlalchemy.dialects.sqlite import INTEGER, TEXT, REAL
 
 from ..db import Base
 from . import CountryTable
@@ -14,3 +14,5 @@ class AirportTable(Base):
     iata = Column(TEXT)
     location = Column(TEXT)
     country_id = Column(INTEGER, ForeignKey(CountryTable.id))
+    latitude = Column(REAL)
+    longitude = Column(REAL)

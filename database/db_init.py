@@ -17,6 +17,7 @@ tables = [
     FlightTable.__table__,
     FlightStatusFlagTable.__table__,
     FlightStatusTable.__table__,
+    FlightScheduleTable.__table__,
 ]
 
 Base = declarative_base()

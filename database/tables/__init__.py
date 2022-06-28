@@ -6,3 +6,4 @@ from .airport import AirportTable
 from .fleet import FleetTable
 from .flight import FlightTable
 from .flight_status import FlightStatusTable
+from .flight_schedule import FlightScheduleTable
