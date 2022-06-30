@@ -6,8 +6,9 @@ from urllib.parse import urljoin
 import orjson
 import pytz
 import requests
+import requests.exceptions
 from lxml import html
-from tzwhere import tzwhere
+from timezonefinder import TimezoneFinder
 
 from database.db import Session
 from database.tables import AirlineTable, AirportTable, FlightScheduleTable
@@ -22,7 +23,6 @@ def get_airline_id() -> int:
     return result
 
 
-COUNTRY = "GREECE"
 URL = "https://en.aegeanair.com/sys/Timetable/ShowMaskMainResults"
 AIRPORTS_URL = "https://en.aegeanair.com/sys/flights/airports"
 PARAMS = {
@@ -34,7 +34,7 @@ PARAMS = {
     "DirectFlight": "true",
 }
 AIRLINE_ID = get_airline_id()
-tzwhere = tzwhere.tzwhere()
+tzfinder = TimezoneFinder()
 
 
 def get_departure_airports() -> list[str]:
@@ -86,10 +86,10 @@ def save_schedule(
     departing_airport = get_airport_by_iata(departing_airport)
     destination_airport = get_airport_by_iata(destination_airport)
 
-    dep_timezone_str = tzwhere.tzNameAt(departing_airport.latitude, departing_airport.longitude)
+    dep_timezone_str = tzfinder.timezone_at(lat=departing_airport.latitude, lng=departing_airport.longitude)
     dep_timezone = pytz.timezone(dep_timezone_str)
 
-    dest_timezone_str = tzwhere.tzNameAt(destination_airport.latitude, destination_airport.longitude)
+    dest_timezone_str = tzfinder.timezone_at(lat=destination_airport.latitude, lng=destination_airport.longitude)
     dest_timezone = pytz.timezone(dest_timezone_str)
 
     departure_day = datetime.datetime.strptime(departure_day, "%Y-%m-%d")
@@ -127,7 +127,11 @@ def schedule():
             while days_counter < 200:
                 PARAMS["DateDeparture"] = day.strftime("%d/%m/%Y")
 
-                response = requests.post(URL, json=PARAMS)
+                try:
+                    response = requests.post(URL, json=PARAMS)
+                except requests.exceptions.ConnectionError:
+                    time.sleep(time_to_seconds(minutes=10))
+                    continue
                 if response.status_code != 200:
                     time.sleep(time_to_seconds(minutes=10))
                     continue
