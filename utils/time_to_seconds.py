@@ -1,6 +1,14 @@
 def time_to_seconds(
-    years: int = None, months: int = None, days: int = None, hours: int = None, minutes: int = None, seconds: int = None
+    *args,
+    years: int = None,
+    months: int = None,
+    days: int = None,
+    hours: int = None,
+    minutes: int = None,
+    seconds: int = None,
 ) -> int:
+    if args:
+        raise ValueError("Function does not support args")
     value = 0
     if years:
         value += 31_535_000 * years
