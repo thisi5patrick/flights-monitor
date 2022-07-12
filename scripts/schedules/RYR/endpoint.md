@@ -1,3 +1,38 @@
+### Departure airports
+
+| Method | URL                                                        |
+|--------|------------------------------------------------------------|
+| GET    | https://www.ryanair.com/api/locate/v5/airports?fields=code | 
+
+### Response
+
+| Name | Type | Example             |
+|------|------|---------------------|
+|      | list | [{"code": "FAO"}, ] |
+
+---
+### Destinations
+
+| Method | URL                                                                                                        |
+|--------|------------------------------------------------------------------------------------------------------------|
+| GET    | https://www.ryanair.com/api/locate/v5/routes?departureAirportCode={airportIATA}&fields=arrivalAirport.code | 
+
+### Response
+
+| Name | Type | Example                  |
+|------|------|--------------------------|
+|      | list | `arrivalAirportResponse` |
+
+### `arrivalAirportResponse`
+
+| Name           | Type   | Example        |
+|----------------|--------|----------------|
+| arrivalAirport | object | {"code": "AHO" |
+
+---
+
+
+
 | Method | URL                                                                                              |
 |--------|--------------------------------------------------------------------------------------------------|
 | GET    | https://www.ryanair.com/api/timtbl/3/schedules/{dep_icao}/{arr_icao}/years/{year}/months/{month} | 
