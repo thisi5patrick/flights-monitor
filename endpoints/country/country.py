@@ -16,7 +16,7 @@ def get_all(records: int = None) -> tuple[Response, int]:
 
     result = jsonify([row._asdict() for row in rows])
 
-    return result, 200
+    return result, result.status_code
 
 
 @country.get("/short-name/<string:short_name>/")
@@ -46,4 +46,4 @@ def get_country_by_long_name(long_name: str, records: int = None) -> tuple[Respo
         rows = query.all()
 
     result = jsonify([row._asdict() for row in rows])
-    return result, 200
+    return result, result.status_code

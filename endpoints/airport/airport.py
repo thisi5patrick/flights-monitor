@@ -27,7 +27,7 @@ def get_all(records: int = None) -> tuple[Response, int]:
         rows = query.all()
 
     result = jsonify([row._asdict() for row in rows])
-    return result, 200
+    return result, result.status_code
 
 
 @airport.get("/country/<string:country>")
@@ -53,4 +53,4 @@ def get_airports_by_country(country: str, records: int = None) -> tuple[Response
         rows = query.all()
 
     result = jsonify([row._asdict() for row in rows])
-    return result, 200
+    return result, result.status_code
