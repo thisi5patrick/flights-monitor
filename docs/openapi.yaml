@@ -9,7 +9,6 @@ paths:
             tags:
                 - Airport
             summary: Endpoint returning a list of 1000 airports.
-            description: This is using docstrings for specifications.
             responses:
                 200:
                     description: A list of 1000 airports.
@@ -17,6 +16,79 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Airport'
+
+    /api/country/{records}:
+        get:
+            tags:
+                - Country
+            summary: Endpoint returing a list of countries.
+            parameters:
+                - in: path
+                  name: records
+                  schema:
+                      type: integer
+                  required: false
+                  description: Number of records to be returned.
+            responses:
+                200:
+                    description: A list of countries.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Country'
+
+    /api/country/short-name/{short_name}/{records}:
+        get:
+            tags:
+                - Country
+            summary: Endpoint returning a list of countries matching the `short_name` parameter.
+            parameters:
+                - in: path
+                  name: short_name
+                  schema:
+                      type: string
+                  required: true
+                  description: Acronym of country to be searched.
+                - in: path
+                  name: records
+                  schema:
+                      type: integer
+                  required: false
+                  description: Number of records to be returned.
+            responses:
+                200:
+                    description: A list of countries matching criteria.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Country'
+
+    /api/country/long-name/{long_name}/{records}:
+        get:
+            tags:
+                - Country
+            summary: Endpoint returning a list of countries matching the `long_name` parameter.
+            parameters:
+                - in: path
+                  name: long_name
+                  schema:
+                      type: string
+                  required: true
+                  description: String of country to be searched.
+                - in: path
+                  name: records
+                  schema:
+                      type: integer
+                  required: false
+                  description: Number of records to be returned.
+            responses:
+                200:
+                    description: A list of countries matching criteria.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Country'
+
 components:
     schemas:
         Airport:
@@ -40,3 +112,13 @@ components:
                 longitude:
                     type: number
                     description: Longitude of the airport
+
+        Country:
+            type: object
+            properties:
+                long_name:
+                    type: string
+                    description: Long name of a country
+                short_name:
+                    type: string
+                    description: Acronym of a country
