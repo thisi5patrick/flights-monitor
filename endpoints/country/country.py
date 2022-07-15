@@ -1,4 +1,5 @@
-from flask import Blueprint, jsonify, Response
+from flask import Blueprint, Response, jsonify
+
 from database.db import Session
 from database.tables import CountryTable
 

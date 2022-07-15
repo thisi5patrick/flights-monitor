@@ -1,7 +1,8 @@
-from flask import Blueprint, jsonify, Response
+from flask import Blueprint, Response, jsonify
+from sqlalchemy.sql import or_
+
 from database.db import Session
 from database.tables import AirportTable, CountryTable
-from sqlalchemy.sql import or_
 
 airport = Blueprint("airport", __name__, url_prefix="/api/airport")
 
