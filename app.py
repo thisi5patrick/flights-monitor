@@ -13,7 +13,8 @@ class RegexConverter(BaseConverter):
 
 def init_app() -> Flask:
     app = Flask("flights_monitor")
-    app.url_map.converters['regex'] = RegexConverter
+    app.url_map.converters["regex"] = RegexConverter
+    app.url_map.strict_slashes = False
     app.register_blueprint(airport)
     app.register_blueprint(country)
     app.config["JSON_SORT_KEYS"] = False
@@ -24,3 +25,8 @@ def init_app() -> Flask:
 
 app = init_app()
 app.run()
+
+
+@app.errorhandler(404)
+def not_found(error):
+    return "Wrong endpoint. Please refer to docs.", 404
